@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>G_szn</title>
+
+	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: #000;
+  color: #fff;
+}
+
+#bgCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+/* NAV */
+nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 30px;
+  background: rgba(0,0,0,0.9);
+  position: sticky;
+  top: 0;
+}
+nav h1 { color: red; }
+
+/* HERO */
+.hero {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.btn {
+  background: red;
+  padding: 10px 20px;
+  border: none;
+  color: white;
+  margin-top: 15px;
+  cursor: pointer;
+}
+
+/* GRID */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+  gap: 20px;
+}
+.card {
+  background: #111;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+}
+.card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+/* SECTIONS */
+section { padding: 40px; }
+input, textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+}
+</style>
+  </head>
+
+  <body>
+
+	<canvas id="bgCanvas"></canvas>
+
+	<nav>
+	  <h1>G_szn</h1>
+	</nav>
+
+	<section class="hero">
+	  <h2>G_szn — Upgrade Your Presence</h2>
+	  <button class="btn" onclick="scrollToShop()">Shop Now</button>
+	</section>
+
+	<!-- SHOP -->
+	<section id="shop">
+	  <h2>Categories</h2>
+
+	  <div class="grid">
+		<div class="card" onclick="openCategory('trousers')">👖 Trousers</div>
+		<div class="card" onclick="openCategory('tshirts')">👕 T-Shirts</div>
+		<div class="card" onclick="openCategory('belts')">🧵 Belts</div>
+		<div class="card" onclick="openCategory('caps')">🧢 Caps</div>
+	  </div>
+
+	  <div id="category-products"></div>
+	</section>
+
+	<!-- PRODUCT PAGE -->
+	<section id="product-page" style="display:none;">
+	  <button class="btn" onclick="closeProduct()">⬅ Back</button>
+	  <div id="product-details"></div>
+	</section>
+
+	<!-- CART -->
+	<section id="cart">
+	  <h2>Cart</h2>
+	  <div id="cart-items"></div>
+	  <h3 id="total"></h3>
+
+	  <h3>Checkout</h3>
+	  <input id="name" placeholder="Full Name">
+	  <input id="phone" placeholder="Phone Number">
+	  <textarea id="address" placeholder="Delivery Address"></textarea>
+
+	  <button class="btn" onclick="checkout()">Place Order</button>
+	</section>
+
+<script>
+// PRODUCTS (5 EACH)
+const allProducts = {
+  trousers: [
+    {name:"Trousers 1",price:18000,img:"images/trousers/trouser1.jpg"},
+    {name:"Trousers 2",price:15000,img:"images/trousers/trouser2.jpg"},
+    {name:"Trousers 3",price:17000,img:"images/trousers/trouser3.jpg"},
+    {name:"Trousers 4",price:19000,img:"images/trousers/trouser4.jpg"},
+    {name:"Trousers 5",price:20000,img:"images/trousers/trouser5.jpg"}
+  ],
+
+  tshirts: [
+    {name:"T-Shirt 1",price:10000,img:"images/tshirts/tshirt1.jpg"},
+    {name:"T-Shirt 2",price:11000,img:"images/tshirts/tshirt2.jpg"},
+    {name:"T-Shirt 3",price:12000,img:"images/tshirts/tshirt3.jpg"},
+    {name:"T-Shirt 4",price:13000,img:"images/tshirts/tshirt4.jpg"},
+    {name:"T-Shirt 5",price:14000,img:"images/tshirts/tshirt5.jpg"}
+  ],
+
+  belts: [
+    {name:"Belt 1",price:6000,img:"images/belts/belt1.jpg"},
+    {name:"Belt 2",price:7000,img:"images/belts/belt2.jpg"},
+    {name:"Belt 3",price:8000,img:"images/belts/belt3.jpg"},
+    {name:"Belt 4",price:9000,img:"images/belts/belt4.jpg"},
+    {name:"Belt 5",price:10000,img:"images/belts/belt5.jpg"}
+  ],
+
+  caps: [
+    {name:"Cap 1",price:7000,img:"images/caps/cap1.jpg"},
+    {name:"Cap 2",price:7500,img:"images/caps/cap2.jpg"},
+    {name:"Cap 3",price:8000,img:"images/caps/cap3.jpg"},
+    {name:"Cap 4",price:8500,img:"images/caps/cap4.jpg"},
+    {name:"Cap 5",price:9000,img:"images/caps/cap5.jpg"}
+  ]
+};
+
+let cart = [];
+
+// CATEGORY
+function openCategory(cat){
+  const container=document.getElementById("category-products");
+  container.innerHTML="<div class='grid'></div>";
+  const grid=container.querySelector(".grid");
+
+  allProducts[cat].forEach(p=>{
+    grid.innerHTML+=`
+    <div class="card" onclick='openProduct(${JSON.stringify(p)})'>
+      <img src="${p.img}">
+      <h3>${p.name}</h3>
+      <p>₦${p.price}</p>
+    </div>`;
+  });
+}
+
+// PRODUCT PAGE
+function openProduct(p){
+  document.getElementById("shop").style.display="none";
+  document.getElementById("product-page").style.display="block";
+
+  document.getElementById("product-details").innerHTML=`
+    <img src="${p.img}" style="width:100%">
+    <h2>${p.name}</h2>
+    <p>₦${p.price}</p>
+
+    <select id="size">
+      <option>S</option>
+      <option>M</option>
+      <option>L</option>
+      <option>XL</option>
+    </select>
+
+    <button class="btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button>
+  `;
+}
+
+function closeProduct(){
+  document.getElementById("shop").style.display="block";
+  document.getElementById("product-page").style.display="none";
+}
+
+// CART
+function addToCart(p){
+  const size=document.getElementById("size")?.value || "-";
+  cart.push({...p,size});
+  updateCart();
+}
+
+function updateCart(){
+  let total=0;
+  const div=document.getElementById("cart-items");
+  div.innerHTML="";
+
+  cart.forEach((item,i)=>{
+    total+=item.price;
+    div.innerHTML+=`
+    <p>${item.name} (${item.size}) - ₦${item.price}
+    <button onclick="cart.splice(${i},1);updateCart()">X</button></p>`;
+  });
+
+  document.getElementById("total").innerText="Total: ₦"+total;
+}
+
+// CHECKOUT
+function checkout(){
+  const name=document.getElementById("name").value;
+  const phone=document.getElementById("phone").value;
+  const address=document.getElementById("address").value;
+
+  if(!name||!phone||!address){
+    alert("Fill all details");
+    return;
+  }
+
+  let total=0;
+  let msg="🔥 G_szn Order 🔥%0A";
+
+  msg+="Name: "+name+"%0A";
+  msg+="Phone: "+phone+"%0A";
+  msg+="Address: "+address+"%0A%0A";
+
+  cart.forEach((i,idx)=>{
+    total+=i.price;
+    msg+=`${idx+1}. ${i.name} (${i.size}) - ₦${i.price}%0A`;
+  });
+
+  msg+="%0ATotal: ₦"+total;
+
+  window.location.href="https://wa.link/hs1lsv?text="+msg;
+}
+
+function scrollToShop(){
+  document.getElementById("shop").scrollIntoView({behavior:"smooth"});
+}
+
+// BACKGROUND
+const canvas=document.getElementById("bgCanvas");
+const ctx=canvas.getContext("2d");
+
+canvas.width=innerWidth;
+canvas.height=innerHeight;
+
+const symbols=["👕","👖","🧢"];
+let particles=[];
+
+for(let i=0;i<120;i++){
+  particles.push({
+    x:Math.random()*canvas.width,
+    y:Math.random()*canvas.height,
+    size:Math.random()*20+10,
+    speed:Math.random()*1.5,
+    symbol:symbols[Math.floor(Math.random()*symbols.length)]
+  });
+}
+
+function draw(){
+  ctx.fillStyle="rgba(0,0,0,0.15)";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  particles.forEach(p=>{
+    ctx.fillStyle="red";
+    ctx.font=p.size+"px monospace";
+    ctx.fillText(p.symbol,p.x,p.y);
+
+    p.y+=p.speed;
+    if(p.y>canvas.height){p.y=0;}
+  });
+
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+
+  </body>
+</html>
